@@ -1,6 +1,10 @@
 # btc-race-24h-20261117-0603
 
-Bot for make.fun "Race a BTC trading bot live for 24 hours"
+[![make.fun · btc-race-24h-20261117-0603](https://make.fun/badge/btc-race-24h-20261117-0603.svg)](https://make.fun/bounty/btc-race-24h-20261117-0603?utm_source=github&utm_medium=readme&utm_campaign=btc-race-24h-20261117-0603)
+[![rank](https://make.fun/badge/btc-race-24h-20261117-0603/meongs123/btc-race-24h-20261117-0603/rank.svg)](https://make.fun/bounty/btc-race-24h-20261117-0603/leaderboard?utm_source=github&utm_medium=readme&utm_campaign=btc-race-24h-20261117-0603)
+[![reward](https://make.fun/badge/btc-race-24h-20261117-0603/meongs123/btc-race-24h-20261117-0603/reward.svg)](https://make.fun/bounty/btc-race-24h-20261117-0603?utm_source=github&utm_medium=readme&utm_campaign=btc-race-24h-20261117-0603)
+
+Bot for make.fun ["Race a BTC trading bot live for 24 hours"](https://make.fun/bounty/btc-race-24h-20261117-0603)
 (btc-race-24h-20261117-0603): trades cbBTC/USDC on 1-minute bars, $1,000 paper.
 
 Strategy: 60-minute dip-bounce. The dev window is a quiet sideways tape
