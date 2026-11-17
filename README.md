@@ -10,6 +10,11 @@ slow 60-minute drawdown of 110+ bps and rides the snap-back: take profit
 entry. Fallback trigger 70 bps after bar 900 if no trade yet (race-window
 guardrail: at least 1 trade).
 
+Revision after the first local grade: a 30-bar re-entry cooldown after a
+stop-loss exit (no instant re-buy of the same falling knife), and the close
+history is now bounded to the last 61 bars. Both are inert on the dev
+window (no stop ever fired there); the re-grade below is unchanged.
+
 Local grade (kit grade-local, process driver): net PnL +$30.09, 5 fills,
 win rate 1.00, max drawdown 0.72%, guardrails met.
 

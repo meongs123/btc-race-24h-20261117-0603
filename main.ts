@@ -12,7 +12,10 @@
 // - Sell the whole position at +TP_BPS above the entry close (take profit),
 //   -SL_BPS below it (stop loss), or -TRAIL_BPS below the peak close since
 //   entry (trailing stop: locks in a bounce that fades before TP).
-// - Fallback: if no trade has happened by bar 900, lower the buy trigger to
+// - After a stop-loss exit, wait 30 bars before re-entering: the tape is
+//   still falling then, and an instant re-buy just re-buys the same knife.
+//   (Inert on the dev window, where no stop ever fired; it protects the
+//   race window against repeated stop-loss bleed in a downtrend.)
 //   70 bps, so the bot still takes at least one trade on a quiet race window
 //   (the race guardrail needs >= 1 trade). Inert on the dev window.
 // - Orders fill at the next bar's open; TP/SL/trail are wide vs the ~36 bps
@@ -37,6 +40,7 @@ let entryPrice: bigint | null = null;
 let peakPrice: bigint | null = null;
 let hasTraded = false;
 let tradable = 0;
+let cooldownUntil = 0;
 
 await runBars({
   onBatch(state: BarsState) {
@@ -45,6 +49,10 @@ await runBars({
     const close = state.close(SYMBOL);
     if (close === null) return [];
     closes.push(close);
+    // Bounded history: only the last K_BARS + 1 closes are ever needed
+    // (the reference close K bars ago), so drop older bars instead of
+    // growing the array for the whole 1,440-bar window.
+    if (closes.length > K_BARS + 1) closes.shift();
     const orders: { side: 'buy'; symbol: string; notional_quote_units: bigint; max_slippage_bps: number }[] = [];
     const sells: { side: 'sell'; symbol: string; qty: bigint; max_slippage_bps: number }[] = [];
     const holding = state.positions.get(SYMBOL);
@@ -54,7 +62,7 @@ await runBars({
       const dropBps = ((close - ref) * 10000n) / ref;
       if (!inPosition) {
         const thr = (!hasTraded && tradable >= FALLBACK_BAR) ? FALLBACK_DROP_BPS : DROP_BPS;
-        if (dropBps <= -thr && state.cash >= MIN_NOTIONAL) {
+        if (tradable > cooldownUntil && dropBps <= -thr && state.cash >= MIN_NOTIONAL) {
           orders.push({ side: 'buy', symbol: SYMBOL, notional_quote_units: state.cash, max_slippage_bps: MAX_SLIPPAGE_BPS });
           entryPrice = close;
           peakPrice = close;
@@ -66,6 +74,10 @@ await runBars({
         const sl = close * 10000n <= entryPrice * (10000n - STOP_LOSS_BPS);
         const tr = close * 10000n <= peakPrice * (10000n - TRAIL_BPS);
         if (tp || sl || tr) {
+          // After a stop-loss exit the tape is still falling: wait 30 bars
+          // before re-entering so the bot does not re-buy the same knife.
+          // TP / trailing exits carry no cooldown (the bounce already paid).
+          if (sl) cooldownUntil = tradable + 30;
           sells.push({ side: 'sell', symbol: SYMBOL, qty: holding.qty, max_slippage_bps: MAX_SLIPPAGE_BPS });
           entryPrice = null;
           peakPrice = null;
